@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0](https://github.com/layervai/qurl-python/compare/v0.5.1...v0.6.0) (2026-11-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* Use HTTPS for remote base URLs. Plain HTTP remains available for local development on loopback.
+
+### Bug Fixes
+
+* require secure SDK base URLs ([#192](https://github.com/layervai/qurl-python/issues/192)) ([0446c5b](https://github.com/layervai/qurl-python/commit/0446c5b48e6d02ef50034548c7eeaeaa42f41216))
+
 ## [0.5.1](https://github.com/layervai/qurl-python/compare/v0.5.0...v0.5.1) (2026-11-15)
 
 
