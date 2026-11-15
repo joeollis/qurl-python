@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/layervai/qurl-python/compare/v0.5.0...v0.5.1) (2026-11-15)
+
+
+### Features
+
+* support scheduled invitations ([#190](https://github.com/layervai/qurl-python/issues/190)) ([8222a63](https://github.com/layervai/qurl-python/commit/8222a636d1d82811ee9841df6e0facbc75ce99b1))
+
 ## [0.5.0](https://github.com/layervai/qurl-python/compare/v0.4.0...v0.5.0) (2026-11-07)
 
 
