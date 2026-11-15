@@ -566,6 +566,9 @@ tools = toolkit.get_tools()  # [CreateQURLTool, ResolveQURLTool, ListQURLsTool, 
 | `user_agent` | No | `qurl-python-sdk/<version>` |
 | `http_client` | No | Auto-created `httpx.Client` |
 
+Both clients require HTTPS for `base_url`. Plain HTTP is allowed only for
+`localhost` and loopback IP addresses.
+
 ## Security Notes
 
 - Treat API keys and qURL links like credentials. Do not log them.

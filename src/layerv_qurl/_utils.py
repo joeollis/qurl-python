@@ -24,6 +24,7 @@ from collections.abc import Iterable, Mapping, Set
 from datetime import datetime, timedelta
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _pkg_version
+from ipaddress import ip_address
 from typing import TYPE_CHECKING, Any, TypeVar
 from urllib.parse import quote, urlsplit
 
@@ -149,6 +150,26 @@ def default_user_agent() -> str:
     except PackageNotFoundError:
         v = "dev"
     return f"qurl-python-sdk/{v}"
+
+
+def validate_base_url(base_url: str) -> str:
+    """Normalize an HTTPS API URL or an HTTP URL for loopback development."""
+    try:
+        url = httpx.URL(base_url)
+    except httpx.InvalidURL:
+        raise ValueError("base_url must be a valid HTTP or HTTPS URL") from None
+    if url.scheme not in ("http", "https") or not url.host:
+        raise ValueError("base_url must be a valid HTTP or HTTPS URL")
+    if url.userinfo or "?" in base_url or "#" in base_url:
+        raise ValueError("base_url must not include credentials, a query, or a fragment")
+    if url.scheme == "http" and url.host != "localhost":
+        try:
+            loopback = ip_address(url.host).is_loopback
+        except ValueError:
+            loopback = False
+        if not loopback:
+            raise ValueError("base_url must use HTTPS unless it targets loopback")
+    return str(url).rstrip("/")
 
 
 def validate_id(value: str, name: str = "resource_id", *, sensitive: bool = False) -> str:

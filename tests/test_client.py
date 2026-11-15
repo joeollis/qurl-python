@@ -1296,3 +1296,34 @@ async def test_async_public_redeem_omits_auth_and_sends_idempotency() -> None:
     assert "authorization" not in route.calls[0].request.headers
     assert route.calls[0].request.headers["idempotency-key"] == "idem-async-redeem"
     assert json.loads(route.calls[0].request.content) == {"code": "ac_async"}
+
+
+@pytest.mark.parametrize("client_type", [QURLClient, AsyncQURLClient])
+@pytest.mark.parametrize(
+    "base_url",
+    [
+        "http://api.example.com",
+        "http://10.0.0.1",
+        "ftp://api.example.com",
+        "/api",
+        "https://",
+        "https://user:pass@api.example.com",
+        "https://api.example.com?",
+        "https://api.example.com#",
+    ],
+)
+def test_client_rejects_unsafe_base_url(client_type, base_url):
+    with pytest.raises(ValueError, match="base_url"):
+        client_type(api_key="test-key", base_url=base_url)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "base_url",
+    ["HTTPS://api.example.com/", "http://localhost:8000", "http://127.0.0.2", "http://[::1]"],
+)
+async def test_client_accepts_https_or_loopback_base_url(base_url):
+    with QURLClient(api_key="test-key", base_url=base_url):
+        pass
+    async with AsyncQURLClient(api_key="test-key", base_url=base_url):
+        pass

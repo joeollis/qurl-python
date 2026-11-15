@@ -78,6 +78,7 @@ from layerv_qurl._utils import (
     retry_delay,
     should_retry_transport,
     validate_alias,
+    validate_base_url,
     validate_create_input,
     validate_domain_input,
     validate_id,
@@ -191,7 +192,7 @@ class AsyncQURLClient:
         if api_key is not None and not api_key.strip():
             raise ValueError("api_key must not be empty")
 
-        self._base_url = base_url.rstrip("/")
+        self._base_url = validate_base_url(base_url)
         self._api_key = api_key
         self._max_retries = max_retries
         self._user_agent = user_agent or default_user_agent()
