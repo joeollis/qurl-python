@@ -321,6 +321,8 @@ class AsyncQURLClient:
         self,
         resource: AsyncProtectedResource | str,
         *,
+        not_before: str | None = None,
+        expires_at: str | None = None,
         valid_for: str | timedelta | None = None,
         label: str | None = None,
         one_time_use: bool | None = None,
@@ -360,6 +362,12 @@ class AsyncQURLClient:
             max_sessions=max_sessions,
             session_duration=session_duration,
         )
+        if expires_at is not None and "expires_in" in body:
+            raise ValueError("expires_at cannot be combined with valid_for")
+        if not_before is not None:
+            body["not_before"] = not_before
+        if expires_at is not None:
+            body["expires_at"] = expires_at
         resp = await self._request(
             "POST",
             f"/v1/resources/{resource_id}/qurls",
@@ -1088,6 +1096,8 @@ class AsyncQURLClient:
         self,
         resource_id: str,
         *,
+        not_before: str | None = None,
+        expires_at: str | None = None,
         expires_in: str | None = None,
         label: str | None = None,
         one_time_use: bool | None = None,
@@ -1099,8 +1109,12 @@ class AsyncQURLClient:
         """Mint a qURL against an existing resource."""
         validate_id(resource_id)
         validate_mint_input(label=label, max_sessions=max_sessions)
+        if expires_at is not None and expires_in is not None:
+            raise ValueError("expires_at cannot be combined with expires_in")
         body = build_body(
             {
+                "not_before": not_before,
+                "expires_at": expires_at,
                 "expires_in": expires_in,
                 "label": label,
                 "one_time_use": one_time_use,
@@ -1888,6 +1902,8 @@ class AsyncProtectedResource:
     async def create_portal(
         self,
         *,
+        not_before: str | None = None,
+        expires_at: str | None = None,
         valid_for: str | timedelta | None = None,
         label: str | None = None,
         one_time_use: bool | None = None,
@@ -1901,6 +1917,8 @@ class AsyncProtectedResource:
         """
         return await self._client.create_portal(
             self,
+            not_before=not_before,
+            expires_at=expires_at,
             valid_for=valid_for,
             label=label,
             one_time_use=one_time_use,

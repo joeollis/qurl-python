@@ -371,6 +371,8 @@ class QURLClient:
         self,
         resource: ProtectedResource | str,
         *,
+        not_before: str | None = None,
+        expires_at: str | None = None,
         valid_for: str | timedelta | None = None,
         label: str | None = None,
         one_time_use: bool | None = None,
@@ -391,6 +393,11 @@ class QURLClient:
                 id string — the CRID a handle carries or that
                 :meth:`protect_url` returns. CRID-shaped IDs are validated
                 locally; the service validates other identifier forms.
+            not_before: Future opening time as an RFC 3339 timestamp.
+                An early attempt does not consume a single-use link.
+            expires_at: Absolute expiry as an RFC 3339 timestamp. With
+                ``not_before``, it also caps active sessions. Use it in
+                place of ``valid_for``.
             valid_for: How long the link stays valid — a duration string
                 (``"5m"``, ``"24h"``) or :class:`datetime.timedelta`. A
                 timedelta must be whole seconds and **at least one minute**;
@@ -445,6 +452,12 @@ class QURLClient:
             max_sessions=max_sessions,
             session_duration=session_duration,
         )
+        if expires_at is not None and "expires_in" in body:
+            raise ValueError("expires_at cannot be combined with valid_for")
+        if not_before is not None:
+            body["not_before"] = not_before
+        if expires_at is not None:
+            body["expires_at"] = expires_at
         resp = self._request(
             "POST",
             f"/v1/resources/{resource_id}/qurls",
@@ -1218,6 +1231,8 @@ class QURLClient:
         self,
         resource_id: str,
         *,
+        not_before: str | None = None,
+        expires_at: str | None = None,
         expires_in: str | None = None,
         label: str | None = None,
         one_time_use: bool | None = None,
@@ -1232,8 +1247,12 @@ class QURLClient:
         """
         validate_id(resource_id)
         validate_mint_input(label=label, max_sessions=max_sessions)
+        if expires_at is not None and expires_in is not None:
+            raise ValueError("expires_at cannot be combined with expires_in")
         body = build_body(
             {
+                "not_before": not_before,
+                "expires_at": expires_at,
                 "expires_in": expires_in,
                 "label": label,
                 "one_time_use": one_time_use,
@@ -2012,6 +2031,8 @@ class ProtectedResource:
     def create_portal(
         self,
         *,
+        not_before: str | None = None,
+        expires_at: str | None = None,
         valid_for: str | timedelta | None = None,
         label: str | None = None,
         one_time_use: bool | None = None,
@@ -2025,6 +2046,8 @@ class ProtectedResource:
         """
         return self._client.create_portal(
             self,
+            not_before=not_before,
+            expires_at=expires_at,
             valid_for=valid_for,
             label=label,
             one_time_use=one_time_use,
