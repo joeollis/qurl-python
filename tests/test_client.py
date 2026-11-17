@@ -537,6 +537,58 @@ def test_patch_retry_reuses_auto_idempotency_key(retry_client: QURLClient) -> No
     assert json.loads(route.calls[1].request.content) == {"extend_by": "7d"}
 
 
+@pytest.mark.parametrize(
+    ("method", "path", "operation", "args", "kwargs"),
+    [
+        (
+            "POST",
+            "/v1/webhooks",
+            "create_webhook",
+            (),
+            {"url": "https://example.com/hook", "events": ["qurl.created"]},
+        ),
+        (
+            "PATCH",
+            "/v1/webhooks/wh_test",
+            "update_webhook",
+            ("wh_test",),
+            {"description": "updated"},
+        ),
+        ("POST", "/v1/webhooks/wh_test/secret", "regenerate_webhook_secret", ("wh_test",), {}),
+        ("POST", "/v1/access-codes", "create_access_code", (), {"resource_id": "r_abc123def45"}),
+    ],
+)
+@respx.mock
+async def test_writes_without_replay_protection_dispatch_once(
+    retry_client: QURLClient,
+    method: str,
+    path: str,
+    operation: str,
+    args: tuple[str, ...],
+    kwargs: dict[str, str | list[str]],
+) -> None:
+    route = respx.request(method, f"{BASE_URL}{path}").mock(
+        return_value=httpx.Response(429, headers={"Retry-After": "0"}, json=_ERR_429),
+    )
+    with pytest.raises(RateLimitError):
+        getattr(retry_client, operation)(*args, **kwargs)
+    assert route.call_count == 1
+
+    async with AsyncQURLClient(api_key="lv_live_test", base_url=BASE_URL, max_retries=2) as client:
+        with pytest.raises(RateLimitError):
+            await getattr(client, operation)(*args, **kwargs)
+    assert route.call_count == 2
+
+    route.side_effect = httpx.ReadError("connection reset")
+    with pytest.raises(QURLNetworkError):
+        getattr(retry_client, operation)(*args, **kwargs)
+    assert route.call_count == 3
+    async with AsyncQURLClient(api_key="lv_live_test", base_url=BASE_URL, max_retries=2) as client:
+        with pytest.raises(QURLNetworkError):
+            await getattr(client, operation)(*args, **kwargs)
+    assert route.call_count == 4
+
+
 @respx.mock
 @pytest.mark.asyncio
 async def test_async_post_does_not_retry_on_503() -> None:

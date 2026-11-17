@@ -1470,6 +1470,7 @@ class QURLClient:
             "/v1/webhooks",
             body=body,
             headers=idempotency_headers(idempotency_key),
+            retry=False,
         )
         return parse_webhook(resp)
 
@@ -1511,6 +1512,7 @@ class QURLClient:
             f"/v1/webhooks/{webhook_id}",
             body=body,
             headers=idempotency_headers(idempotency_key),
+            retry=False,
         )
         return parse_webhook(resp)
 
@@ -1528,6 +1530,7 @@ class QURLClient:
             "POST",
             f"/v1/webhooks/{webhook_id}/secret",
             headers=idempotency_headers(idempotency_key),
+            retry=False,
         )
         return parse_webhook(resp)
 
@@ -1722,6 +1725,7 @@ class QURLClient:
             "/v1/access-codes",
             body=body,
             headers=idempotency_headers(idempotency_key),
+            retry=False,
         )
         return parse_access_code(resp)
 
@@ -1877,7 +1881,7 @@ class QURLClient:
         """Issue an HTTP request and parse the JSON envelope.
 
         ``retry=False`` prevents an ambiguous transport failure from repeating
-        a mutation that has no server-side replay protection (resource sharing).
+        a mutation that has no server-side replay protection.
 
         ``include_auth=False`` is for public flows such as
         :meth:`redeem_access_code`, where the bearer token should stay off
