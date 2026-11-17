@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/layervai/qurl-python/compare/v0.6.0...v0.6.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* stop retries for writes without replay protection ([#194](https://github.com/layervai/qurl-python/issues/194)) ([26d2c5c](https://github.com/layervai/qurl-python/commit/26d2c5c5d770deb79e03f30fc1e9b24b8d6b3304))
+
 ## [0.6.0](https://github.com/layervai/qurl-python/compare/v0.5.1...v0.6.0) (2026-11-15)
 
 
