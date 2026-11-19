@@ -1,33 +1,57 @@
-# qURL Python SDK for expiring access links
+# qURL Python SDK
 
 [![PyPI](https://img.shields.io/pypi/v/qurl-python)](https://pypi.org/project/qurl-python/)
 [![CI](https://github.com/layervai/qurl-python/actions/workflows/ci.yml/badge.svg)](https://github.com/layervai/qurl-python/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/pypi/pyversions/qurl-python)](https://pypi.org/project/qurl-python/)
 [![License](https://img.shields.io/github/license/layervai/qurl-python)](LICENSE)
 
-Use [qURL™ by LayerV](https://layerv.ai/qurl/) to share localhost web apps,
-private APIs, and files through expiring access links. This
-[Python SDK](https://layerv.ai/sdk/) creates and manages resource access from
-your code. Use `qurl-python` in Python
-services, automation scripts, or LangChain tools to register resources and
-issue links with a chosen lifetime.
+**Give someone (or an AI agent) a link to something private, from your Python code.**
+[qURL by LayerV](https://layerv.ai/qurl/) turns a private URL (a dashboard, an
+internal API, a preview running on your laptop) into a link you control. You
+choose how long it lasts and how many times it can be used, and you can revoke
+it at any time. The person you send it to just clicks. They need no account
+and no install.
 
-For a local app, [publish it with the CLI](https://github.com/layervai/qurl-integrations/tree/main/apps/cli)
-or configure a connector before creating access links. SDK calls register
-resources and issue links; they do not start the local service or remove
-any separate public route to it. Your app's own sign-in still applies.
+## What you can do in two minutes
 
-Portal recipients do not need LayerV credentials, API keys, or SDK state. They
-open the qURL link. Credentials are only for software that protects URLs or
-creates portals.
+| You want to… | Call |
+| --- | --- |
+| Share a private URL for 5 minutes | `client.create_portal_for_url(url, name=..., valid_for="5m")` |
+| Make a link that works once | `resource.create_portal(valid_for="1h", one_time_use=True)` |
+| Cut off one link and keep the rest | `client.revoke_resource_qurl(resource_id, qurl_id)` |
+| Let a LangChain agent create and revoke links | `QURLToolkit(client=client).get_tools()` |
+| Do it all from async code | `AsyncQURLClient` |
 
-[Installation](#installation) · [Quickstart](#quickstart) ·
-[Async usage](#async-usage) · [LangChain integration](#langchain-integration) ·
-[Resource and token management](#rest-shaped-api-compatibility)
+```bash
+pip install qurl-python
+```
 
-[Local preview workflow](#share-a-localhost-preview-from-python) ·
-[File-sharing workflows](#share-files-from-a-python-workflow) ·
-[Sharing questions](#python-sharing-questions) · [Private links](https://qurl.link/)
+```python
+from layerv_qurl import QURLClient
+
+client = QURLClient(api_key="lv_live_...")   # key: https://layerv.ai/qurl/dashboard/keys/
+
+portal, resource = client.create_portal_for_url(
+    "https://internal.example.com/dashboard",
+    name="Team dashboard",     # the name your recipient sees
+    valid_for="5m",
+)
+print(portal.link)             # send this link
+```
+
+**App on your laptop?** Publish it first with the
+[qURL CLI](https://github.com/layervai/qurl-integrations/tree/main/apps/cli)
+(`qurl publish http://127.0.0.1:3000`, with no account needed). Then issue links here.
+
+### For AI agents and tools
+
+- Package: `qurl-python` · import: `layerv_qurl` · Python 3.10+
+- Auth: `QURLClient(api_key=...)` (env convention `QURL_API_KEY`)
+- Core flow: `protect_url(url, name=...)` → `resource.create_portal(valid_for=...)` → `portal.link`
+- `protect_url` is idempotent per account + URL, so it is safe to call again
+- `name` is required whenever a call creates a resource
+- Other languages: [TypeScript](https://github.com/layervai/qurl-typescript) ·
+  [Go](https://github.com/layervai/qurl-go) · [MCP server](https://github.com/layervai/qurl-mcp)
 
 ## Share a localhost preview from Python
 
@@ -113,17 +137,6 @@ Browser recipients open the link and retain any app login requirement.
 This Python SDK's `enter_portal` uses the LayerV API and requires a credential
 with `qurl:resolve`; see [opening portals](#opening-portals). Do not pass an
 issuer API key to someone merely to let them open a browser link.
-
-## Why qURL?
-
-qURL lets your code issue temporary access to a resource while the local
-origin can remain on localhost or a private network. The Connector supplies
-that access path; the SDK controls resource and link operations. Restrict any
-separate public route if qURL should be the only way to reach the app.
-
-A portal link is an access credential, not proof that its holder is the person
-named in a label. Keep application authentication when identity matters. Use
-the resource, token, and session APIs for the access rules your workflow needs.
 
 ## Installation
 
